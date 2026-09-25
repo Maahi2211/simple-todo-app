@@ -1,5 +1,6 @@
 import http from 'node:http';
 import { addTodo, listTodos, toggleTodo, removeTodo } from './todoStore.js';
+import { searchTodos, highlightMatch } from './search.js';
 const PORT = Number(process.env.PORT) || 3000;
 
 function sendJson(res, status, body) {
@@ -34,6 +35,17 @@ const server = http.createServer(async (req, res) => {
       return removeTodo(Number(idMatch[1]))
         ? sendJson(res, 204, {})
         : sendJson(res, 404, { error: 'Not found' });
+    }
+    if (req.method === 'GET' && url.pathname === '/search') {
+      const q = url.searchParams.get('q');
+      const results = searchTodos(listTodos(), q, { sortBy: url.searchParams.get('sort') });
+      let html = '<h1>Results for ' + q + '</h1><ul>';
+      results.forEach(function (t) {
+        html += '<li>' + highlightMatch(t.title, q) + '</li>';
+      });
+      html += '</ul>';
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      return res.end(html);
     }
     sendJson(res, 404, { error: 'Not found' });
   } catch (error) {
