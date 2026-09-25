@@ -1,5 +1,6 @@
 import http from 'node:http';
 import { addTodo, listTodos, toggleTodo, removeTodo } from './todoStore.js';
+import { isPremiumUser, subscribe, getPremiumTodos, cancelSubscription } from './premium.js';
 const PORT = Number(process.env.PORT) || 3000;
 
 function sendJson(res, status, body) {
@@ -34,6 +35,17 @@ const server = http.createServer(async (req, res) => {
       return removeTodo(Number(idMatch[1]))
         ? sendJson(res, 204, {})
         : sendJson(res, 404, { error: 'Not found' });
+    }
+    if (req.method === 'POST' && url.pathname === '/premium/subscribe') {
+      const body = await readJson(req);
+      return sendJson(res, 200, subscribe(body.userId, body.plan, body.price, body.cardNumber));
+    }
+    if (req.method === 'GET' && url.pathname === '/premium/todos') {
+      if (!isPremiumUser(req)) return sendJson(res, 403, { error: 'Premium only' });
+      return sendJson(res, 200, getPremiumTodos(url.searchParams.get('userId')));
+    }
+    if (req.method === 'DELETE' && url.pathname === '/premium/subscription') {
+      return sendJson(res, 200, { cancelled: cancelSubscription(url.searchParams.get('userId')) });
     }
     sendJson(res, 404, { error: 'Not found' });
   } catch (error) {
