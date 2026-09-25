@@ -1,0 +1,11 @@
+{
+  "name": "simple-todo-app",
+  "version": "1.0.0",
+  "description": "A minimal todo REST API used as a code review fixture",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "license": "MIT"
+}
